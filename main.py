@@ -11,8 +11,14 @@ from Dataset.dataloader import detection_collate_fn
 
 
 def test_best_model(
-    model, data_root, proposal_dir, save_dir, device,
-    num_images=10, score_thresh=0.5, nms_thresh=0.3,
+    model,
+    data_root,
+    proposal_dir,
+    save_dir,
+    device,
+    num_images=10,
+    score_thresh=0.5,
+    nms_thresh=0.3,
 ):
     # 先检查，不自动下载 test，也不把 val 当成 test。
     best_path = save_dir / "best.pth"
@@ -39,9 +45,13 @@ def test_best_model(
     print("如果缺少某张 test 图片的 .pt，会提示跳过；请先生成 test proposals。")
 
     return test(
-        model=model, dataset=test_dataset, device=device,
-        save_dir=Path("./test_results"), num_images=num_images,
-        score_thresh=score_thresh, nms_thresh=nms_thresh,
+        model=model,
+        dataset=test_dataset,
+        device=device,
+        save_dir=Path("./test_results"),
+        num_images=num_images,
+        score_thresh=score_thresh,
+        nms_thresh=nms_thresh,
     )
 
 
@@ -72,21 +82,31 @@ def main():
     # False：正常训练，结束后加载 best 并画 test；True：直接加载 best，只画 test。
     only_test = False
     num_test_images = 10  # 只看前 10 张；想看多少就改多少，不自动跑完整 test。
-    score_thresh = 0.5   # 类别分数太低的预测框不保留。
-    nms_thresh = 0.3     # 同类别预测框重叠过大时，NMS 去掉低分框。
+    score_thresh = 0.5  # 类别分数太低的预测框不保留。
+    nms_thresh = 0.3  # 同类别预测框重叠过大时，NMS 去掉低分框。
 
     if only_test:
         # 缺少文件时，先返回，不为了测试去下载 VGG 权重或数据。
         best_path = save_dir / "best.pth"
         test_split = data_root / "VOCdevkit/VOC2007/ImageSets/Main/test.txt"
-        if not best_path.exists() or not test_split.exists() or not proposal_dir.is_dir():
+        if (
+            not best_path.exists()
+            or not test_split.exists()
+            or not proposal_dir.is_dir()
+        ):
             print("只测试需要 best.pth、test.txt 和 test 的 proposals，请检查：")
             print(best_path, test_split, proposal_dir, sep="\n")
             return
         model = Fastrcnn(weights=None).to(device)  # 参数马上由 best.pth 完整加载。
         test_best_model(
-            model, data_root, proposal_dir, save_dir, device,
-            num_images=num_test_images, score_thresh=score_thresh, nms_thresh=nms_thresh,
+            model,
+            data_root,
+            proposal_dir,
+            save_dir,
+            device,
+            num_images=num_test_images,
+            score_thresh=score_thresh,
+            nms_thresh=nms_thresh,
         )
         return
 
@@ -215,8 +235,14 @@ def main():
     #    test 不参与训练或选择 best，GT 只用于画图对照，不参与生成预测。
     # =========================================================
     test_best_model(
-        model, data_root, proposal_dir, save_dir, device,
-        num_images=num_test_images, score_thresh=score_thresh, nms_thresh=nms_thresh,
+        model,
+        data_root / "test",
+        proposal_dir,
+        save_dir,
+        device,
+        num_images=num_test_images,
+        score_thresh=score_thresh,
+        nms_thresh=nms_thresh,
     )
 
 

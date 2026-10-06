@@ -75,13 +75,15 @@ def generate_voc_proposals(
             if num_proposals is None:
                 print(f"[{i}/{len(tasks)}] {image_id} already exists, skip", flush=True)
             else:
-                print(f"[{i}/{len(tasks)}] {image_id}: [{num_proposals}, 4]", flush=True)
+                print(
+                    f"[{i}/{len(tasks)}] {image_id}: [{num_proposals}, 4]", flush=True
+                )
 
 
 if __name__ == "__main__":
     generate_voc_proposals(
-        voc_root="/root/Fast-Rcnn/data/VOCdevkit/VOC2007",
-        split="trainval",
+        voc_root="/root/Fast-Rcnn/data/test/VOCdevkit/VOC2007",
+        split="Test",
         max_proposals=2000,
         num_workers=4,  # 你的服务器有 8 个可用 CPU，先试 4，也可以改成 8 对比速度。
     )
