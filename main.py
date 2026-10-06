@@ -1,3 +1,4 @@
+from sympy import false
 import torch
 from pathlib import Path
 from torch.utils.data import DataLoader
@@ -80,7 +81,7 @@ def main():
     save_dir.mkdir(parents=True, exist_ok=True)
 
     # False：正常训练，结束后加载 best 并画 test；True：直接加载 best，只画 test。
-    only_test = True
+    only_test = false
     num_test_images = 10  # 只看前 10 张；想看多少就改多少，不自动跑完整 test。
     score_thresh = 0.5  # 类别分数太低的预测框不保留。
     nms_thresh = 0.3  # 同类别预测框重叠过大时，NMS 去掉低分框。
