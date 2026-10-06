@@ -33,7 +33,7 @@ CLASS_TO_IDX = {name: i + 1 for i, name in enumerate(VOC_CLASSES)}
 class FastRCNNVOCDataset(torch.utils.data.Dataset):
     def __init__(self, root, proposal_dir, image_set="train"):
         self.voc = VOCDetection(
-            root=root, year="2007", image_set=image_set, download=False
+            root=root, year="2007", image_set=image_set, download=True
         )
         self.proposal_dir = proposal_dir
 
@@ -61,9 +61,11 @@ class FastRCNNVOCDataset(torch.utils.data.Dataset):
         # ----------------------------------------------
         image_id = Path(annotation["filename"]).stem
         proposal_path = os.path.join(self.proposal_dir, f"{image_id}.pt")
-        proposals = torch.load(
-            proposal_path, map_location="cpu", weights_only=True
-        ).float().reshape(-1, 4)
+        proposals = (
+            torch.load(proposal_path, map_location="cpu", weights_only=True)
+            .float()
+            .reshape(-1, 4)
+        )
         # VOCDetection 返回 PIL 图片；to_tensor 转成 [3,H,W]，并除以 255。
         image = to_tensor(image)
         image = normalize(
