@@ -75,12 +75,12 @@ def main():
     # 若服务器的 VOCdevkit 就在项目根目录，这一行改成 Path(".")。
     data_root = Path("/root/Fast-Rcnn/data")
     proposal_dir = data_root / "VOCdevkit/VOC2007/SelectiveSearchProposals"
-
+    proposal_dirTest = data_root / "test/VOCdevkit/VOC2007/SelectiveSearchProposals"
     save_dir = Path("./checkpoints")
     save_dir.mkdir(parents=True, exist_ok=True)
 
     # False：正常训练，结束后加载 best 并画 test；True：直接加载 best，只画 test。
-    only_test = False
+    only_test = True
     num_test_images = 10  # 只看前 10 张；想看多少就改多少，不自动跑完整 test。
     score_thresh = 0.5  # 类别分数太低的预测框不保留。
     nms_thresh = 0.3  # 同类别预测框重叠过大时，NMS 去掉低分框。
@@ -88,20 +88,20 @@ def main():
     if only_test:
         # 缺少文件时，先返回，不为了测试去下载 VGG 权重或数据。
         best_path = save_dir / "best.pth"
-        test_split = data_root / "VOCdevkit/VOC2007/ImageSets/Main/test.txt"
+        test_split = data_root / "test/VOCdevkit/VOC2007/ImageSets/Main/test.txt"
         if (
             not best_path.exists()
             or not test_split.exists()
-            or not proposal_dir.is_dir()
+            or not proposal_dirTest.is_dir()
         ):
             print("只测试需要 best.pth、test.txt 和 test 的 proposals，请检查：")
-            print(best_path, test_split, proposal_dir, sep="\n")
+            print(best_path, test_split, proposal_dirTest, sep="\n")
             return
         model = Fastrcnn(weights=None).to(device)  # 参数马上由 best.pth 完整加载。
         test_best_model(
             model,
-            data_root,
-            proposal_dir,
+            data_root / "test",
+            proposal_dirTest,
             save_dir,
             device,
             num_images=num_test_images,
@@ -237,7 +237,7 @@ def main():
     test_best_model(
         model,
         data_root / "test",
-        proposal_dir,
+        proposal_dirTest,
         save_dir,
         device,
         num_images=num_test_images,
