@@ -27,7 +27,7 @@ def main():
     # =========================================================
     # data_root 指向包含 VOCdevkit 的目录，和 utils/generate.py 的路径一致。
     # 若服务器的 VOCdevkit 就在项目根目录，这一行改成 Path(".")。
-    data_root = Path("./data")
+    data_root = Path("/root/Fast-Rcnn/data")
     proposal_dir = data_root / "VOCdevkit/VOC2007/SelectiveSearchProposals"
 
     save_dir = Path("./checkpoints")

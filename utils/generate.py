@@ -44,7 +44,7 @@ def generate_voc_proposals(
 
 if __name__ == "__main__":
     generate_voc_proposals(
-        voc_root="./data/VOCdevkit/VOC2007",
+        voc_root="/root/Fast-Rcnn/data/VOCdevkit/VOC2007",
         split="trainval",
         max_proposals=2000,
     )
