@@ -1,6 +1,6 @@
 from pathlib import Path
 import torch
-from .generate_selective_search import selective_search
+from utils.generate_selective_search import selective_search
 
 
 def generate_voc_proposals(
