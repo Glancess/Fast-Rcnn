@@ -5,3 +5,4 @@ data/
 *.pth
 *.pt
 .DS_Store
+test_results/

@@ -31,9 +31,9 @@ CLASS_TO_IDX = {name: i + 1 for i, name in enumerate(VOC_CLASSES)}
 
 
 class FastRCNNVOCDataset(torch.utils.data.Dataset):
-    def __init__(self, root, proposal_dir, image_set="train"):
+    def __init__(self, root, proposal_dir, image_set="train", download=True):
         self.voc = VOCDetection(
-            root=root, year="2007", image_set=image_set, download=True
+            root=root, year="2007", image_set=image_set, download=download
         )
         self.proposal_dir = proposal_dir
 

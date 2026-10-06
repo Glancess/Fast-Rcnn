@@ -6,7 +6,43 @@ from Dataset.dataset import FastRCNNVOCDataset
 from Model import Fastrcnn
 from engine.train_one_epoch import train_one_epoch
 from engine.eval import evaluate
+from engine.test import test
 from Dataset.dataloader import detection_collate_fn
+
+
+def test_best_model(
+    model, data_root, proposal_dir, save_dir, device,
+    num_images=10, score_thresh=0.5, nms_thresh=0.3,
+):
+    # 先检查，不自动下载 test，也不把 val 当成 test。
+    best_path = save_dir / "best.pth"
+    test_split = data_root / "VOCdevkit/VOC2007/ImageSets/Main/test.txt"
+    if not best_path.exists():
+        print("没有 best.pth，跳过 test：", best_path)
+        return
+    if not test_split.exists():
+        print("没有 VOC2007 test 数据，跳过 test：", test_split)
+        return
+    if not proposal_dir.is_dir():
+        print("没有 proposal 目录，跳过 test：", proposal_dir)
+        print("需要先给 test 图片生成 proposals，不是只生成 trainval。")
+        return
+
+    test_dataset = FastRCNNVOCDataset(
+        root=data_root, proposal_dir=proposal_dir, image_set="test", download=False
+    )
+    # 用 best，而不是最后一轮的模型；只加载模型权重，不恢复 SGD。
+    checkpoint = torch.load(best_path, map_location="cpu", weights_only=True)
+    model.load_state_dict(checkpoint["model_state_dict"])
+    print("\nLoad best model:", best_path, "val loss:", checkpoint["val_loss"])
+    print("Test 图片总数：", len(test_dataset), "本次最多画：", num_images)
+    print("如果缺少某张 test 图片的 .pt，会提示跳过；请先生成 test proposals。")
+
+    return test(
+        model=model, dataset=test_dataset, device=device,
+        save_dir=Path("./test_results"), num_images=num_images,
+        score_thresh=score_thresh, nms_thresh=nms_thresh,
+    )
 
 
 def main():
@@ -32,6 +68,27 @@ def main():
 
     save_dir = Path("./checkpoints")
     save_dir.mkdir(parents=True, exist_ok=True)
+
+    # False：正常训练，结束后加载 best 并画 test；True：直接加载 best，只画 test。
+    only_test = False
+    num_test_images = 10  # 只看前 10 张；想看多少就改多少，不自动跑完整 test。
+    score_thresh = 0.5   # 类别分数太低的预测框不保留。
+    nms_thresh = 0.3     # 同类别预测框重叠过大时，NMS 去掉低分框。
+
+    if only_test:
+        # 缺少文件时，先返回，不为了测试去下载 VGG 权重或数据。
+        best_path = save_dir / "best.pth"
+        test_split = data_root / "VOCdevkit/VOC2007/ImageSets/Main/test.txt"
+        if not best_path.exists() or not test_split.exists() or not proposal_dir.is_dir():
+            print("只测试需要 best.pth、test.txt 和 test 的 proposals，请检查：")
+            print(best_path, test_split, proposal_dir, sep="\n")
+            return
+        model = Fastrcnn(weights=None).to(device)  # 参数马上由 best.pth 完整加载。
+        test_best_model(
+            model, data_root, proposal_dir, save_dir, device,
+            num_images=num_test_images, score_thresh=score_thresh, nms_thresh=nms_thresh,
+        )
+        return
 
     # =========================================================
     # 3. VOC train / val
@@ -152,6 +209,15 @@ def main():
 
     print("\nTraining finished.")
     print("Best val loss:", best_val_loss)
+
+    # =========================================================
+    # 8. test：best 权重 -> 全部 proposals -> 修框 -> NMS -> 画图。
+    #    test 不参与训练或选择 best，GT 只用于画图对照，不参与生成预测。
+    # =========================================================
+    test_best_model(
+        model, data_root, proposal_dir, save_dir, device,
+        num_images=num_test_images, score_thresh=score_thresh, nms_thresh=nms_thresh,
+    )
 
 
 if __name__ == "__main__":

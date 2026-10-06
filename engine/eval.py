@@ -52,9 +52,7 @@ def evaluate(model, data_loader, device):
             sampled_matched_gt_boxes = gt_boxes[
                 assignments["max_indices"][selected_idx]
             ]
-            encoded_targets = encode_boxes(
-                sampled_proposals, sampled_matched_gt_boxes
-            )
+            encoded_targets = encode_boxes(sampled_proposals, sampled_matched_gt_boxes)
             all_labels.append(sampled_labels)
             all_bbox_targets.append(encoded_targets)
 

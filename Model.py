@@ -5,9 +5,10 @@ from torchvision.models import vgg16, VGG16_Weights
 
 
 class Fastrcnn(nn.Module):
-    def __init__(self):
+    def __init__(self, weights=VGG16_Weights.DEFAULT):
         super().__init__()
-        vgg = vgg16(weights=VGG16_Weights.DEFAULT)
+        # 正常训练用 ImageNet 权重；只加载 best 做测试时传 weights=None，避免重复下载。
+        vgg = vgg16(weights=weights)
         self.backbone = vgg.features[:-1]  # type: ignore # 去掉最后一个 maxpool5
         self.classifier = vgg.classifier[:-1]  # 去掉原来的 1000 类 fc8
         self.pooled = RoIPool(
