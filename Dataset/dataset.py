@@ -31,7 +31,9 @@ CLASS_TO_IDX = {name: i + 1 for i, name in enumerate(VOC_CLASSES)}
 
 class FastRCNNVOCDataset(torch.utils.data.Dataset):
     # 保留你原来的类名；Faster R-CNN 的 Dataset 不再读取离线 proposals。
-    def __init__(self, root, image_set="train", download=True, min_size=600, max_size=1000):
+    def __init__(
+        self, root, image_set="train", download=False, min_size=600, max_size=1000
+    ):
         self.voc = VOCDetection(
             root=root, year="2007", image_set=image_set, download=download
         )
