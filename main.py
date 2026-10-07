@@ -69,7 +69,7 @@ def main():
     # =========================================================
     # data_root 指向包含 VOCdevkit 的目录；也可以复用旧项目的 VOC 数据目录。
     # 若服务器的 VOCdevkit 就在项目根目录，这一行改成 Path(".")。
-    data_root = Path("/root/Faster-Rcnn/data")
+    data_root = Path("/root/Fast-Rcnn/data")
     save_dir = Path("./checkpoints")
     save_dir.mkdir(parents=True, exist_ok=True)
 
