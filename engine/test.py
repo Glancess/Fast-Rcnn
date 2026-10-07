@@ -10,12 +10,15 @@ from utils.decode import decode_boxes
 
 @torch.no_grad()
 def predict_one_image(
-    model, image, proposals, device, score_thresh=0.5, nms_thresh=0.3
+    model, image, device, score_thresh=0.5, nms_thresh=0.3
 ):
-    """image: [3,H,W]；proposals: [N,4]，xyxy。返回最终框、类别和分数。"""
+    """image: [3,H,W]；模型内部生成 RPN proposals，不需要离线框或 GT。"""
     model.eval()
     _, h, w = image.shape
 
+    images = image.unsqueeze(0).to(device)  # [1,3,H,W]
+    outputs = model(images, [(h, w)])
+    proposals = outputs["proposals"][0]
     if len(proposals) == 0:
         return {
             "boxes": torch.empty((0, 4)),
@@ -23,10 +26,9 @@ def predict_one_image(
             "scores": torch.empty((0,)),
         }
 
-    # 一次预测一张图，仍然使用全部 proposals，不做 GT 匹配或 64 个框的采样。
-    images = image.unsqueeze(0).to(device)  # [1,3,H,W]
-    proposals = proposals.to(device)
-    cls_logits, bbox_logits = model(images, [proposals])
+    # 一次预测一张图，最多300个 RPN 框全部进检测头，不做 GT 匹配或64框采样。
+    cls_logits = outputs["cls_logits"]
+    bbox_logits = outputs["bbox_logits"]
     scores = F.softmax(cls_logits, dim=1)  # [N,21]，包含背景。
     bbox_deltas = bbox_logits.reshape(-1, 20, 4)  # [N,20,4]
 
@@ -140,18 +142,24 @@ def test(
         try:
             sample = dataset[index]
         except FileNotFoundError as error:
-            print(f"{image_id} 缺少图片、标注或 proposal，跳过：{error}")
+            print(f"{image_id} 缺少图片或标注，跳过：{error}")
             continue
 
         # GT 不传给预测函数，只在预测结束后用于左侧画框对照。
         prediction = predict_one_image(
-            model, sample["image"], sample["proposals"], device,
+            model, sample["image"], device,
             score_thresh=score_thresh, nms_thresh=nms_thresh,
         )
         raw_image, _ = dataset.voc[index]
+        # 模型在 resize 后的图片上预测；画到原图前，要将 GT 和预测一起缩放回去。
+        h, w = sample["image_size"]
+        original_h, original_w = sample["original_size"]
+        scale = torch.tensor([original_w / w, original_h / h, original_w / w, original_h / h])
+        prediction["boxes"] = prediction["boxes"] * scale
+        gt_boxes = sample["boxes"] * scale
         save_path = save_dir / f"{image_id}.jpg"
         draw_comparison(
-            raw_image, sample["boxes"], sample["labels"], prediction, save_path
+            raw_image, gt_boxes, sample["labels"], prediction, save_path
         )
         saved_images += 1
         print(f"[{index + 1}/{num_images}] {image_id}: {len(prediction['boxes'])} detections")

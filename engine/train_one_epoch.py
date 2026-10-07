@@ -1,13 +1,20 @@
 import torch
 from utils.encode import encode_boxes
 from utils.assignAndsampling import assign_gt_boxes, sample_rois
-from utils.loss import FastRCNNLoss
+from utils.loss import FastRCNNLoss, RPNLoss
 
 criterion = FastRCNNLoss()
+rpn_criterion = RPNLoss()
 
 
-def train_one_epoch(model, optimizer, data_loader, device):
+def train_one_epoch(model, optimizer, data_loader, device, stage=1, proposal_model=None):
+    if stage not in [1, 2, 3, 4]:
+        raise ValueError("stage 只能是 1、2、3、4。")
+    if stage == 2 and proposal_model is None:
+        raise ValueError("第2阶段需要固定的第1阶段 RPN。")
     model.train()
+    if proposal_model is not None:
+        proposal_model.eval()
     total_loss = 0.0
     total_cls_loss = 0.0
     total_bbox_loss = 0.0
@@ -15,9 +22,37 @@ def train_one_epoch(model, optimizer, data_loader, device):
 
     for batch in data_loader:
         images = batch["images"].to(device)
-        proposals_list = [x.to(device) for x in batch["proposals"]]
+        image_sizes = batch["image_sizes"]
         gt_boxes_list = [x.to(device) for x in batch["boxes"]]
         gt_labels_list = [x.to(device) for x in batch["labels"]]
+
+        if stage in [1, 3]:
+            # 第1/3阶段只训练 RPN，不能把分类器 loss 混进来。
+            _, outputs = model.forward_rpn(images, image_sizes)
+            loss, cls_loss, bbox_loss = rpn_criterion(
+                outputs["rpn_cls_logits"], outputs["rpn_bbox_deltas"],
+                outputs["anchors"], gt_boxes_list, image_sizes,
+            )
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+            num_images = len(images)
+            total_loss += loss.item() * num_images
+            total_cls_loss += cls_loss.item() * num_images
+            total_bbox_loss += bbox_loss.item() * num_images
+            total_rois += num_images  # RPN 按图片平均；检测阶段按 RoI 平均。
+            continue
+
+        if stage == 2:
+            # 两个独立 backbone：固定 RPN 产生框，新的 ImageNet VGG 学检测。
+            with torch.no_grad():
+                _, outputs = proposal_model.forward_rpn(images, image_sizes, proposal_training=True)
+            feature = model.backbone(images)
+        else:
+            # 第4阶段已经共享 backbone，卷积和 RPN 都冻结，只让 FC/检测头学习。
+            with torch.no_grad():
+                feature, outputs = model.forward_rpn(images, image_sizes, proposal_training=True)
+        proposals_list = outputs["proposals"]
 
         all_sampled_proposals = []
         all_labels = []
@@ -29,7 +64,7 @@ def train_one_epoch(model, optimizer, data_loader, device):
             gt_boxes = gt_boxes_list[b]
             gt_labels = gt_labels_list[b]
 
-            if len(proposals) == 0 or len(gt_boxes) == 0:
+            if len(proposals) == 0:
                 # 即使没有可用框，也保留该图片在列表中的位置，不能让图片编号错位。
                 all_sampled_proposals.append(proposals.new_empty((0, 4)))
                 continue
@@ -46,13 +81,12 @@ def train_one_epoch(model, optimizer, data_loader, device):
                 continue
 
             sampled_labels = assignments["labels"][selected_idx]
-            sampled_matched_gt_boxes = gt_boxes[
-                assignments["max_indices"][selected_idx]
-            ]
             # 3. proposal 与匹配 GT 算 [dx,dy,dw,dh]；背景的回归目标不参与 loss。
-            encoded_targets = encode_boxes(
-                sampled_proposals, sampled_matched_gt_boxes
-            )
+            encoded_targets = torch.zeros_like(sampled_proposals)
+            fg_idx = torch.where(sampled_labels > 0)[0]
+            if len(fg_idx) > 0:
+                matched_idx = assignments["max_indices"][selected_idx[fg_idx]]
+                encoded_targets[fg_idx] = encode_boxes(sampled_proposals[fg_idx], gt_boxes[matched_idx])
             all_labels.append(sampled_labels)
             all_bbox_targets.append(encoded_targets)
 
@@ -61,7 +95,7 @@ def train_one_epoch(model, optimizer, data_loader, device):
 
         labels = torch.cat(all_labels, dim=0)
         bbox_targets = torch.cat(all_bbox_targets, dim=0)
-        cls_logits, bbox_logits = model(images, all_sampled_proposals)
+        cls_logits, bbox_logits = model.forward_head(feature, all_sampled_proposals)
         loss, cls_loss, bbox_loss = criterion(
             cls_logits, bbox_logits, labels, bbox_targets
         )

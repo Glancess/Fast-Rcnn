@@ -1,5 +1,4 @@
 import torch
-from torchvision.models.detection._utils import BoxCoder
 
 
 def encode_boxes(

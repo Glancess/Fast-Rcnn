@@ -1,3 +1,4 @@
+import math
 import torch
 
 
@@ -19,8 +20,9 @@ def decode_boxes(proposals, deltas):
 
     tx = deltas[:, 0]
     ty = deltas[:, 1]
-    tw = deltas[:, 2]
-    th = deltas[:, 3]
+    # 网络刚开始训练时可能预测很大的 dw/dh，限制 exp 的输入，避免溢出。
+    tw = deltas[:, 2].clamp(max=math.log(1000.0 / 16))
+    th = deltas[:, 3].clamp(max=math.log(1000.0 / 16))
 
     xg = tx * wp + xp
     yg = ty * hp + yp
