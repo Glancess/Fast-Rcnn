@@ -206,9 +206,16 @@ best.pth       → 阶段4最终Faster R-CNN，供only_test使用
 
 数据、checkpoint、缓存、虚拟环境和test_results不应提交Git。本次没有自动git add、commit或push。
 ## 11.预测结果展示
-<img width="705" height="249" alt="image" src="https://github.com/user-attachments/assets/5ecfff5a-7f1e-4eac-b695-a91ad8a34ce9" />
-<img width="524" height="349" alt="image" src="https://github.com/user-attachments/assets/b0225b72-aa4f-468e-9113-ea1cfade8a5c" />
-<img width="817" height="120" alt="image" src="https://github.com/user-attachments/assets/d4c96f97-f0c6-4489-aa3b-a8eae0091d78" />
-<img width="404" height="101" alt="image" src="https://github.com/user-attachments/assets/4e60c6fc-ed15-49bf-bf51-62c057573fe6" />
-
+<img width="1000" height="363" alt="000014" src="https://github.com/user-attachments/assets/802028bc-2d7d-4229-8032-761b99909a7b" />
+<img width="1000" height="405" alt="000013" src="https://github.com/user-attachments/assets/0297cc0f-9b5a-475e-9ee2-0282fa1c347e" />
+<img width="1000" height="354" alt="000011" src="https://github.com/user-attachments/assets/49994344-b9ef-4daf-88ec-65b88bf861b8" />
+<img width="708" height="510" alt="000010" src="https://github.com/user-attachments/assets/7fcdc6af-196e-4177-8a23-60964087cd60" />
+<img width="1000" height="405" alt="000008" src="https://github.com/user-attachments/assets/9d9c18d5-4107-433d-b6da-2fe046dd1acd" />
+<img width="1802" height="624" alt="000007_compare" src="https://github.com/user-attachments/assets/c319e3c0-e2ee-4601-ad6a-6e3daf197fbb" />
+<img width="1000" height="405" alt="000006" src="https://github.com/user-attachments/assets/0794dfe4-8142-48d5-8172-eab06d7e6312" />
+<img width="1600" height="624" alt="000005_compare" src="https://github.com/user-attachments/assets/01341325-a419-4ba6-81f9-d26cd780a1cb" />
+<img width="1000" height="436" alt="000004" src="https://github.com/user-attachments/assets/6fab5351-c5d9-4848-a3e0-70cc4b2dcae4" />
+<img width="1000" height="405" alt="000003" src="https://github.com/user-attachments/assets/a845a251-2eac-49c3-ae5a-8b8119333d85" />
+<img width="670" height="530" alt="000002" src="https://github.com/user-attachments/assets/342d5718-caed-4d48-b24d-2d092df432e6" />
+<img width="706" height="530" alt="000001" src="https://github.com/user-attachments/assets/9fe5d11d-db9b-44a0-b18d-e66b3363cc1c" />
 
