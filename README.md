@@ -205,3 +205,10 @@ best.pth       → 阶段4最终Faster R-CNN，供only_test使用
 轻量检查使用真实本地VOC读取/resize/标签，真实随机初始化VGG小输入前向和单步梯度，以及小模型四阶段更新/冻结、eval、checkpoint、预测画图与main调度。没有完整训练、下载数据/权重或检查服务器成绩。随机输出不是检测效果展示。
 
 数据、checkpoint、缓存、虚拟环境和test_results不应提交Git。本次没有自动git add、commit或push。
+## 11.预测结果展示
+<img width="705" height="249" alt="image" src="https://github.com/user-attachments/assets/5ecfff5a-7f1e-4eac-b695-a91ad8a34ce9" />
+<img width="524" height="349" alt="image" src="https://github.com/user-attachments/assets/b0225b72-aa4f-468e-9113-ea1cfade8a5c" />
+<img width="817" height="120" alt="image" src="https://github.com/user-attachments/assets/d4c96f97-f0c6-4489-aa3b-a8eae0091d78" />
+<img width="404" height="101" alt="image" src="https://github.com/user-attachments/assets/4e60c6fc-ed15-49bf-bf51-62c057573fe6" />
+
+
